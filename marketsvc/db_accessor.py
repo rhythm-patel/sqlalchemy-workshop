@@ -1,35 +1,30 @@
 import logging
-import sqlite3
 
-from db.init_db import DB_PATH
+from db.base import engine
+from sqlalchemy import text
 
 
-def execute_query(query, params):
-    with sqlite3.connect(DB_PATH) as conn:
-        cur = conn.cursor()
-        cur.execute(query, params)
-        rows = cur.fetchall()
-        return rows
+def execute_query(query, params=None):
+    with engine.connect() as conn:
+        return conn.execute(text(query), params)
 
 
 def execute_insert_query(query, params):
-    with sqlite3.connect(DB_PATH) as conn:
-        cur = conn.cursor()
-        cur.execute(query, params)
-        result = cur.fetchone()
+    with engine.connect() as conn:
+        cursor = conn.execute(text(query), params)
+        result = cursor.fetchone()
         conn.commit()
         return result
 
 
 def execute_insert_queries(query, params_tuple):
-    with sqlite3.connect(DB_PATH) as conn:
-        cur = conn.cursor()
-        cur.executemany(query, params_tuple)
+    with engine.connect() as conn:
+        conn.execute(text(query), params_tuple)
         conn.commit()
 
 
 def get_customers():
-    rows = execute_query("SELECT * FROM customer", {})
+    rows = execute_query("SELECT * FROM customer")
     return rows
 
 
@@ -73,7 +68,7 @@ def get_total_cost_of_an_order(order_id):
         """,
         {"order_id": order_id},
     )
-    return rows[0][0]
+    return rows.one().total
 
 
 def get_orders_between_dates(after, before):
@@ -115,7 +110,7 @@ def add_new_order_for_customer(customer_id, items):
             RETURNING id
             """,
             {"customer_id": customer_id},
-        )[0]
+        ).id
 
         execute_insert_queries(
             """
