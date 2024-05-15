@@ -1,40 +1,43 @@
 import logging
-import sqlite3
 
+import aiosqlite
 from db.init_db import DB_PATH
 
 
-def execute_query(query, params):
-    with sqlite3.connect(DB_PATH) as conn:
-        cur = conn.cursor()
-        cur.execute(query, params)
-        rows = cur.fetchall()
+async def execute_query(query, params):
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(query, params)
+        rows = await cursor.fetchall()
         return rows
 
 
-def execute_insert_query(query, params):
-    with sqlite3.connect(DB_PATH) as conn:
-        cur = conn.cursor()
-        cur.execute(query, params)
-        result = cur.fetchone()
-        conn.commit()
+async def stream_query(query, *params):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute(query, *params) as cursor:
+            async for row in cursor:
+                yield row
+
+
+async def execute_insert_query(query, params):
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(query, params)
+        result = await cursor.fetchone()
+        await db.commit()
         return result
 
 
-def execute_insert_queries(query, params_tuple):
-    with sqlite3.connect(DB_PATH) as conn:
-        cur = conn.cursor()
-        cur.executemany(query, params_tuple)
-        conn.commit()
+async def execute_insert_queries(query, params_tuple):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.executemany(query, params_tuple)
+        await db.commit()
 
 
 def get_customers():
-    rows = execute_query("SELECT * FROM customer", {})
-    return rows
+    return stream_query("SELECT * FROM customer", {})
 
 
-def get_orders_of_customer(customer_id):
-    rows = execute_query(
+async def get_orders_of_customer(customer_id):
+    rows = await execute_query(
         """
         SELECT 
             item.name, 
@@ -56,8 +59,8 @@ def get_orders_of_customer(customer_id):
     return rows
 
 
-def get_total_cost_of_an_order(order_id):
-    rows = execute_query(
+async def get_total_cost_of_an_order(order_id):
+    rows = await execute_query(
         """
         SELECT 
             SUM(item.price*order_items.quantity) AS total
@@ -77,7 +80,7 @@ def get_total_cost_of_an_order(order_id):
 
 
 def get_orders_between_dates(after, before):
-    rows = execute_query(
+    return stream_query(
         """
         SELECT
             customer.name,
@@ -101,12 +104,11 @@ def get_orders_between_dates(after, before):
         """,
         {"after": after, "before": before},
     )
-    return rows
 
 
-def add_new_order_for_customer(customer_id, items):
+async def add_new_order_for_customer(customer_id, items):
     try:
-        new_order_id = execute_insert_query(
+        result = await execute_insert_query(
             """
             INSERT INTO orders
                 (customer_id, order_time)
@@ -115,9 +117,10 @@ def add_new_order_for_customer(customer_id, items):
             RETURNING id
             """,
             {"customer_id": customer_id},
-        )[0]
+        )
+        new_order_id = result[0]
 
-        execute_insert_queries(
+        await execute_insert_queries(
             """
         INSERT INTO order_items
             (order_id, item_id, quantity)
