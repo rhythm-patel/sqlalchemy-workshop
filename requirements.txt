@@ -1,4 +1,6 @@
 aiosqlite
 fastapi
 uvicorn[standard]
+sqlalchemy
+greenlet
 ruff

@@ -21,12 +21,14 @@ def hello():
 
 @app.get("/api/customers")
 async def customers():
-    return [customer async for customer in get_customers()]
+    return [customer._asdict() async for customer in get_customers()]
 
 
 @app.get("/api/orders/{cust_id}")
 async def orders(cust_id: int):
-    return await get_orders_of_customer(cust_id)
+    orders = await get_orders_of_customer(cust_id)
+    response = [order._asdict() for order in orders]
+    return response
 
 
 @app.get("/api/order_total/{order_id}")
@@ -50,7 +52,7 @@ async def orders_total(request: Request):
 @app.get("/api/orders_between_dates/{before}/{after}")
 async def orders_between_dates(before: str, after: str):
     orders_gen = get_orders_between_dates(after, before)
-    return [order async for order in orders_gen]
+    return [order._asdict() async for order in orders_gen]
 
 
 @app.post("/api/add_new_order", status_code=status.HTTP_201_CREATED)
