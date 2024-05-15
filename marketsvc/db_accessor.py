@@ -3,11 +3,11 @@ from datetime import datetime
 
 from db.base import engine
 from db.customer import Customer
-from db.item import Item
 from db.order_items import OrderItems
 from db.orders import Orders
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 
 def get_customers():
@@ -32,12 +32,12 @@ def get_orders_of_customer(customer_id):
 def get_total_cost_of_an_order(order_id):
     with Session(engine) as session:
         result = session.execute(
-            select(Item.price * OrderItems.quantity)
+            select(func.sum(OrderItems.item_total))
             .join(Orders.order_items)
             .join(OrderItems.item)
             .where(Orders.id == order_id)
         )
-        total_cost = sum(result.scalars().all())
+        total_cost = result.scalar()
 
         return total_cost
 

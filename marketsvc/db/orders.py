@@ -32,7 +32,7 @@ class Orders(Base):
                     "name": order_item.item.name,
                     "price": order_item.item.price,
                     "quantity": order_item.quantity,
-                    "total": order_item.item.price * order_item.quantity,
+                    "total": order_item.item_total,
                 }
                 for order_item in self.order_items
             ],
