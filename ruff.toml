@@ -1,0 +1,21 @@
+# https://docs.astral.sh/ruff/configuration/
+line-length = 80
+target-version = "py312"
+src = ["marketsvc/*"]
+
+[lint]
+select = [
+    "E", # pycodestyle
+    "F", # flake8
+    "B", # bugbear
+    "C4", # comprehensions
+    "I", # isort
+    "PERF", # perflint
+    "SIM", # simplify
+    "RUF", # ruff rules
+    "TID", # tidy imports
+    "UP", # pyupgrade
+]
+
+[lint.isort]
+known-first-party = ["marketsvc.*"]
