@@ -20,13 +20,13 @@ def hello():
 @app.get("/api/customers")
 def customers():
     customers = get_customers()
-    return (customer._asdict() for customer in customers)
+    return (customer.as_dict() for customer in customers)
 
 
 @app.get("/api/orders/{cust_id}")
 def orders(cust_id: int):
     orders = get_orders_of_customer(cust_id)
-    return (order._asdict() for order in orders)
+    return (order.as_dict() for order in orders)
 
 
 @app.get("/api/order_total/{order_id}")
@@ -38,7 +38,7 @@ def order_total(order_id: int):
 @app.get("/api/orders_between_dates/{before}/{after}")
 def orders_between_dates(before: str, after: str):
     orders = get_orders_between_dates(after, before)
-    return (order._asdict() for order in orders)
+    return (order.as_dict() for order in orders)
 
 
 @app.post("/api/add_new_order", status_code=status.HTTP_201_CREATED)
