@@ -1,6 +1,5 @@
 import pathlib
 
-
 import aiosqlite
 
 DB_PATH = "marketdb"
