@@ -1,3 +1,5 @@
+import asyncio
+
 import uvicorn
 from db.init_db import init_db
 from db_accessor import (
@@ -7,7 +9,7 @@ from db_accessor import (
     get_orders_of_customer,
     get_total_cost_of_an_order,
 )
-from fastapi import Body, FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, status
 
 app = FastAPI(debug=True)
 
@@ -18,39 +20,60 @@ def hello():
 
 
 @app.get("/api/customers")
-def customers():
-    customers = get_customers()
-    return (customer.as_dict() for customer in customers)
+async def customers():
+    return [customer.as_dict() async for customer in get_customers()]
 
 
 @app.get("/api/orders/{cust_id}")
-def orders(cust_id: int):
-    orders = get_orders_of_customer(cust_id)
-    return (order.as_dict() for order in orders)
+async def orders(cust_id: int):
+    orders = await get_orders_of_customer(cust_id)
+    response = [order.as_dict() for order in orders]
+    return response
 
 
 @app.get("/api/order_total/{order_id}")
-def order_total(order_id: int):
-    total = get_total_cost_of_an_order(order_id)
+async def order_total(order_id: int):
+    total = await get_total_cost_of_an_order(order_id)
     return {"Order Total": total}
 
 
+@app.get("/api/orders_total")
+async def orders_total(request: Request):
+    json = await request.json()
+    orders = json.get("orders", [])
+    async with asyncio.TaskGroup() as tg:
+        order_tasks = [
+            tg.create_task(get_total_cost_of_an_order(order))
+            for order in orders
+        ]
+    return [task.result() for task in order_tasks]
+
+
 @app.get("/api/orders_between_dates/{before}/{after}")
-def orders_between_dates(before: str, after: str):
-    orders = get_orders_between_dates(after, before)
-    return (order.as_dict() for order in orders)
+async def orders_between_dates(before: str, after: str):
+    orders_gen = get_orders_between_dates(after, before)
+    return [order.as_dict() async for order in orders_gen]
 
 
 @app.post("/api/add_new_order", status_code=status.HTTP_201_CREATED)
-def add_new_order(json: dict = Body):
+async def add_new_order(request: Request):
+    json = await request.json()
     customer_id = json.get("customer_id")
     items = json.get("items")
 
-    success = add_new_order_for_customer(customer_id, items)
+    success = await add_new_order_for_customer(customer_id, items)
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
 
+async def main():
+    config = uvicorn.Config(
+        "server:app", host="127.0.0.1", port=9090, reload=True
+    )
+    server = uvicorn.Server(config)
+    await init_db()
+    await server.serve()
+
+
 if __name__ == "__main__":
-    init_db()
-    uvicorn.run("server:app", host="127.0.0.1", port=9090, reload=True)
+    asyncio.run(main())
