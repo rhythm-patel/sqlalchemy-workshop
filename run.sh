@@ -1,6 +1,6 @@
 case $1 in
     "run")
-        python3.12 marketsvc/server.py
+        python3.13 marketsvc/server.py
         ;;
     "customers")
         curl http://localhost:9090/api/customers
