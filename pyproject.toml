@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "marketplace"
 description = "Marketplace - an example of SQLAlchemy tutorial"
 version = "0.0.1"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 license = {file = "LICENSE"}
 authors = [
   { name = "Aya Elsayed", email = "ayah.ehab11@gmail.com" },
