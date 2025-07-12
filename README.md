@@ -11,14 +11,14 @@ This repository contains the code for the Marketplace service demo to follow alo
 1. Create a python virtual environment and activate it:
 
     ```sh
-    python3.12 -m venv ./venv
+    python3.13 -m venv ./venv
     source ./venv/bin/activate
     ```
 
 2. Install your service dependencies:
 
     ```sh
-    python3.12 -m pip install -r requirements.txt
+    python3.13 -m pip install -r requirements.txt
     ```
 
 3. Run the service:
@@ -30,7 +30,7 @@ This repository contains the code for the Marketplace service demo to follow alo
     which is equivalent to
 
     ```sh
-    python3.12 marketsvc/server.py
+    python3.13 marketsvc/server.py
     ```
 
 4. In a new terminal window, run the `curl` commands:
