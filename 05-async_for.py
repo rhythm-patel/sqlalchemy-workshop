@@ -4,9 +4,9 @@ import asyncio
 import time
 
 
-async def dispatch_orders(delay):
+async def dispatch_orders(order):
     print(f"Started dispatching at {time.strftime('%X')}")
-    for i in range(delay):
+    for i in range(order):
         await asyncio.sleep(1)
         yield i
     print(f"Done dispatching at {time.strftime('%X')}")
@@ -23,7 +23,7 @@ async def main():
         async for order in dispatch_orders(5):
             print(f"order {order} dispatched.")
 
-            # TODO: uncomment this 
+            # TODO: uncomment this
             # tg.create_task(deliver_order(order))
 
 
